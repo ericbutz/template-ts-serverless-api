@@ -1,0 +1,59 @@
+service: template-ts-serverless-api
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  # Info on AWS profiles: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+  profile: serverless
+  runtime: nodejs16.x
+  environment:
+    TABLE_NAME: ${self:service}2-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:BatchGetItem"
+        - "dynamodb:ConditionCheckItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:Query"
+        - "dynamodb:UpdateItem"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}"
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+functions:
+  createUser:
+    handler: src/handlers/createUser.main
+    events:
+      - http:
+          path: /users
+          method: post
+  getUser:
+    handler: src/handlers/getUser.main
+    events:
+      - http:
+          path: /users/{username}
+          method: get
+
+resources:
+  Resources:
+    TrussApiTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties: 
+        AttributeDefinitions: 
+          - AttributeName: "PK"
+            AttributeType: "S"
+          - AttributeName: "SK"
+            AttributeType: "S"
+        BillingMode: "PAY_PER_REQUEST"
+        KeySchema: 
+          - AttributeName: "PK"
+            KeyType: "HASH"
+          - AttributeName: "SK"
+            KeyType: "RANGE"
+        TableName: ${self:provider.environment.TABLE_NAME}
