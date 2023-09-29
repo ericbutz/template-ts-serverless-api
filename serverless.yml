@@ -11,20 +11,21 @@ provider:
   runtime: nodejs16.x
   environment:
     TABLE_NAME: ${self:service}2-${opt:stage, self:provider.stage}
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "dynamodb:BatchGetItem"
-        - "dynamodb:ConditionCheckItem"
-        - "dynamodb:GetItem"
-        - "dynamodb:PutItem"
-        - "dynamodb:Query"
-        - "dynamodb:UpdateItem"
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:ConditionCheckItem"
+            - "dynamodb:GetItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+          Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}"
 
 plugins:
   - serverless-esbuild
-  - serverless-offline
 
 functions:
   createUser:
